@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Smrekovec | Slovenia's Sleeping Giant</title>
+  <!-- A-Frame and Components -->
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-environment-component@1.3.3/dist/aframe-environment-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-look-at-component@1.0.0/dist/aframe-look-at-component.min.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#f46a25",
+            "background-light": "#f8f6f5",
+            "background-dark": "#221610",
+          },
+          fontFamily: {
+            "display": ["Space Grotesk", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .glow-effect {
+      box-shadow: 0 0 20px rgba(244, 106, 37, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .glow-effect:hover {
+      box-shadow: 0 0 35px rgba(244, 106, 37, 0.7);
+      transform: scale(1.02);
+    }
+
+    .magma-gradient {
+      background: linear-gradient(180deg, rgba(34, 22, 16, 0) 0%, rgba(244, 106, 37, 0.1) 100%);
+    }
+
+    .vr-hidden {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -100;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .vr-active {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 99999;
+      opacity: 1;
+      pointer-events: auto;
+      background: #000;
+    }
+
+    #exit-vr-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 100000;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #exit-vr-btn:hover {
+      background: rgba(244, 106, 37, 0.8);
+      border-color: rgba(244, 106, 37, 1);
+    }
+
+    /* Intro Video Overlay */
+    #intro-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 90000;
+      background: #000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    #intro-overlay.active {
+      display: flex;
+    }
+
+    #intro-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #enter-game-btn {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: linear-gradient(135deg, #f46a25, #e04e10);
+      color: white;
+      border: 2px solid rgba(244, 106, 37, 0.6);
+      padding: 18px 48px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 30px rgba(244, 106, 37, 0.5), 0 8px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #enter-game-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) scale(1);
+    }
+
+    #enter-game-btn:hover {
+      background: linear-gradient(135deg, #ff7b35, #f46a25);
+      box-shadow: 0 0 50px rgba(244, 106, 37, 0.8), 0 12px 40px rgba(0, 0, 0, 0.5);
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    #enter-game-btn:active {
+      transform: translateX(-50%) scale(0.97);
+    }
+
+    #skip-intro-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      color: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.3s ease;
+    }
+
+    #skip-intro-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+  </style>
+</head>
+
+<body
+  class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-x-hidden">
+  <!-- Top Navigation -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-background-dark/80 backdrop-blur-md border-b border-primary/20">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">volcano</span>
+        <h1 class="text-2xl font-bold tracking-tighter text-slate-100">SMREKOVEC</h1>
+      </div>
+      <nav class="hidden md:flex items-center gap-10">
+        <a class="text-sm font-medium hover:text-primary transition-colors uppercase tracking-widest" href="#story">The
+          Story</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors uppercase tracking-widest"
+          href="#science">The Science</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors uppercase tracking-widest"
+          href="#vr">Research</a>
+      </nav>
+      <button id="enter-vr-nav"
+        class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20">
+        <span class="material-symbols-outlined text-xl">vrpano</span>
+        <span class="text-sm uppercase tracking-wider">Enter VR</span>
+      </button>
+    </div>
+  </header>
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-background-dark/40 via-background-dark/60 to-background-dark z-10">
+      </div>
+      <img class="w-full h-full object-cover scale-110"
+        data-alt="Cinematic wide shot of a misty mountain range at sunset"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1hbQNs2b-b6xXO8aBzCrJBb-jCrj8-csO-GGyCAqqdLDBQEicfdt20mjSdC-f8tW7eB1qh8sGaw5ULpd6-1H6M7crCXdvEQTuF6p2Ppri5s-7uvnPzBSCNkpaoFbD8W807NMDqmwZflkP08Ek6QT5W4b1Y066lDTnuMyDAJNdDUYm6ed4iEqmbBTLdSNgxD3J9IiRu9Kwfevdl-0qPXtjueRgXW0z4Yx6ONrkWnfxlyAdDaO1sO3DIU9XKywLqka1JScJtEXLkc1q" />
+    </div>
+    <div class="relative z-20 max-w-4xl px-6 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 border border-primary/30 mb-8">
+        <span class="material-symbols-outlined text-white text-sm">emergency_heat</span>
+        <span class="text-white text-xs font-bold uppercase tracking-[0.2em]">23 Million Years of
+          History</span>
+      </div>
+      <h1 class="text-5xl md:text-8xl font-bold text-white mb-6 tracking-tight leading-[0.9] drop-shadow-2xl">
+        Explore Smrekovec: <br />
+        <span class="text-primary">Slovenia's Sleeping Giant</span>
+      </h1>
+      <p class="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+        Journey into the heart of the Alps' only volcanic mass. Uncover the molten legacy hidden beneath the
+        lush peaks of Northern Slovenia.
+      </p>
+
+    </div>
+    <!-- Bottom Fade -->
+    <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background-dark to-transparent z-20">
+    </div>
+  </section>
+  <!-- The Story Section -->
+  <section class="py-24 relative bg-background-dark" id="story">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="order-2 lg:order-1 relative">
+          <div class="absolute -top-6 -left-6 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
+          <div class="rounded-xl overflow-hidden border border-primary/20 shadow-2xl relative z-10">
+            <img class="w-full aspect-square object-cover" data-alt="Jagged volcanic rock formations with green moss"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuByVdQbycLkp2UP3T_CuvDARzhYaZhuEnkRlCAhPHBT2iheVcPASq2monlRbgxwIYhvgkkqGiMmKXlljOEsMc7VuN0tKllIXGDAqMCPQKrj3rjD3kYPPsndApumrbusaX0IBAnYFCYXcomfSnHHvS-Vx6gRhQAgrPSILjCTB0bOzCRpWpP7BXEg9MJwc1oCYYiOmJO7ryNGync2OKWsiBJGQ0VWk4a8ftPjL4wHWJhotMGw6wegWq2COyDnVCIyGx_axFVu7ketLG0i" />
+          </div>
+          <div
+            class="absolute -bottom-8 -right-8 bg-background-dark p-6 rounded-xl border border-primary/20 shadow-xl z-20 hidden md:block max-w-[240px]">
+            <p class="text-primary font-bold text-3xl mb-1">23M</p>
+            <p class="text-slate-400 text-sm leading-tight">Years since the primary volcanic activity shaped
+              this landscape.</p>
+          </div>
+        </div>
+        <div class="order-1 lg:order-2">
+          <span class="text-primary font-bold uppercase tracking-widest text-sm mb-4 block">Ancient
+            History</span>
+          <h2 class="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight">The Story of Smrekovec
+          </h2>
+          <div class="space-y-6 text-slate-300 text-lg leading-relaxed">
+            <p>
+              While the Alps are famed for their limestone peaks, Smrekovec stands alone as a unique
+              geological anomaly. This 1,577-meter massif is the remnant of an ancient undersea volcano
+              that dominated the Tertiary landscape.
+            </p>
+            <p>
+              Formed from andesite—a volcanic rock named after the Andes mountains—Smrekovec tells a tale
+              of tectonic collisions and molten fury. Today, the fires are gone, replaced by rare alpine
+              flora and pristine peat bogs, but the mountain's shape still whispers its fiery origins.
+            </p>
+          </div>
+          <div class="mt-10 flex gap-8 py-8 border-t border-primary/10">
+            <div>
+              <p class="text-white font-bold text-xl">Andesite</p>
+              <p class="text-slate-500 text-sm uppercase">Unique Lithology</p>
+            </div>
+            <div>
+              <p class="text-white font-bold text-xl">Tertiary</p>
+              <p class="text-slate-500 text-sm uppercase">Geologic Era</p>
+            </div>
+            <div>
+              <p class="text-white font-bold text-xl">Dormant</p>
+              <p class="text-slate-500 text-sm uppercase">Current Status</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- The Science Section -->
+  <section class="py-24 bg-background-dark magma-gradient" id="science">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-20">
+        <span class="text-primary font-bold uppercase tracking-widest text-sm mb-4 block">How It Works</span>
+        <h2 class="text-4xl md:text-6xl font-bold text-white tracking-tight">The Science of Volcanoes</h2>
+        <div class="w-24 h-1 bg-primary mx-auto mt-6"></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Magma Chamber -->
+        <div
+          class="bg-background-dark/50 border border-primary/10 p-10 rounded-xl hover:border-primary/40 transition-all group">
+          <div
+            class="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center mb-8 group-hover:bg-primary/20 transition-all">
+            <span class="material-symbols-outlined text-primary text-4xl">volcano</span>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Magma Chambers</h3>
+          <p class="text-slate-400 leading-relaxed">
+            Deep beneath the crust lie reservoirs of molten rock. Pressure builds over millennia as gas
+            dissolves and buoyancy pushes the magma upward through conduits.
+          </p>
+        </div>
+        <!-- Tectonic Plates -->
+        <div
+          class="bg-background-dark/50 border border-primary/10 p-10 rounded-xl hover:border-primary/40 transition-all group">
+          <div
+            class="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center mb-8 group-hover:bg-primary/20 transition-all">
+            <span class="material-symbols-outlined text-primary text-4xl">public</span>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Tectonic Shifts</h3>
+          <p class="text-slate-400 leading-relaxed">
+            Smrekovec was birthed from the collision of the African and Eurasian plates, a subduction zone
+            that fueled volcanic activity throughout the Savinja valley.
+          </p>
+        </div>
+        <!-- Eruption Types -->
+        <div
+          class="bg-background-dark/50 border border-primary/10 p-10 rounded-xl hover:border-primary/40 transition-all group">
+          <div
+            class="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center mb-8 group-hover:bg-primary/20 transition-all">
+            <span class="material-symbols-outlined text-primary text-4xl">air</span>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Eruption Styles</h3>
+          <p class="text-slate-400 leading-relaxed">
+            From explosive pyroclastic clouds to slow-moving andesite lava flows, Smrekovec exhibited a
+            range of behaviors that defined its layered geology.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- VR CTA Section -->
+  <section class="py-24 bg-background-dark relative overflow-hidden" id="vr">
+    <div class="max-w-5xl mx-auto px-6 relative z-10">
+      <div
+        class="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-3xl p-12 text-center md:p-20 relative">
+        <div class="absolute inset-0 opacity-10 pointer-events-none">
+          <img class="w-full h-full object-cover grayscale" data-alt="Abstract topographic map pattern"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtdhp7VtllZLFRsRseDbXpUMDDUAiBiFXXh3DCjtq5W3fTM5Jvvie9DqMJb41BHCjr3Ct9xoexIKhdnjlJkS8s92Iw0l2Mcu0CQxGNEaWR_lLpv021JxEoYzYtohHEnTiwgHHazOszSa-tSuvItzbh-4Yro13iGrCEv_peSmhwedef9R9GKgcPzshKVu4PYySGfRZOAI5hkGfyD5JznhjazGVxITYCS-pdvroNcv2Bbkt6Ov1w5O8lmUv_wfs7mti4YrdS39QTK4wi" />
+        </div>
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Ready to descend?</h2>
+        <p class="text-xl text-slate-300 mb-10 max-w-xl mx-auto">
+          Experience the Smrekovec eruption in full 360° virtual reality. Walk the molten vents and witness
+          the birth of a mountain.
+        </p>
+        <button id="enter-vr-cta"
+          class="glow-effect inline-flex items-center gap-4 bg-primary text-white px-12 py-5 rounded-lg font-black text-xl uppercase tracking-tighter shadow-2xl">
+          <span class="material-symbols-outlined text-3xl">vrpano</span>
+          Enter VR Experience
+        </button>
+      </div>
+    </div>
+  </section>
+  <!-- Footer -->
+  <footer class="bg-background-dark border-t border-primary/10 py-12">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">volcano</span>
+        <span class="text-xl font-bold tracking-tighter">SMREKOVEC</span>
+      </div>
+      <p class="text-slate-500 text-sm">© 2024 Geological Survey of Slovenia. All rights reserved.</p>
+      <div class="flex gap-6">
+        <a class="text-slate-500 hover:text-primary transition-colors" href="#"><span
+            class="material-symbols-outlined">language</span></a>
+        <a class="text-slate-500 hover:text-primary transition-colors" href="#"><span
+            class="material-symbols-outlined">share</span></a>
+        <a class="text-slate-500 hover:text-primary transition-colors" href="#"><span
+            class="material-symbols-outlined">info</span></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Intro Video Overlay -->
+  <div id="intro-overlay">
+    <video id="intro-video" autoplay muted playsinline>
+      <source src="/intro-v2.mp4" type="video/mp4">
+    </video>
+    <button id="skip-intro-btn">Skip Intro</button>
+    <button id="enter-game-btn">
+      <span class="material-symbols-outlined text-2xl">vrpano</span>
+      Enter Game
+    </button>
+  </div>
+
+  <!-- VR Overlay Structure -->
+  <div id="vr-wrapper" class="vr-hidden">
+    <button id="exit-vr-btn">Exit VR</button>
+  </div>
+
+  <!-- Ensure logic runs properly after elements mount -->
+  <script type="module" src="/main.js?v=2"></script>
+  <script>
+    setInterval(() => {
+      const rocks = document.querySelectorAll('.flying-rock');
+      if (rocks.length > 0) {
+        const debugData = Array.from(rocks).slice(0, 3).map(r => {
+          return `Vis: ${r.getAttribute('visible')}, ObjVis: ${r.object3D?.visible}, Pos: ${JSON.stringify(r.getAttribute('position'))}, Scale: ${JSON.stringify(r.getAttribute('scale'))}`;
+        });
+        console.log("ROCK DEBUG: ", debugData);
+      }
+    }, 500);
+  </script>
+</body>
+
+</html>
